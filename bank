@@ -1,0 +1,204 @@
+import json
+import random
+import string
+from pathlib import Path
+
+
+class Bank:
+    database = 'data.json'
+    data = []
+  
+    try:
+        if Path(database).exists():
+            with open(database) as fs:
+                data = json.loads(fs.read())
+        else:
+            print("no such files exist")
+
+    except Exception as err:
+        print(f"an exception occured as {err}")        
+
+    @classmethod
+    def __update(cls):
+        with open(Bank.database,'w') as fs:
+            fs.write(json.dumps(Bank.data))
+
+    @classmethod
+    def __accountgenerate(cls):
+        alpha = random.choices(string.ascii_letters,k=3) 
+        num = random.choices(string.digits,k=3)
+        spchar = random.choices("!@#$%^&*",k=1)
+        id = alpha + num + spchar 
+        random.shuffle(id)
+        return "".join(id)      
+
+
+    def createaccount(self):
+        info = {
+            "name": input("Tell your name:"),
+            "age" : int(input("Tell your age:")),
+            "email": input("Tell your email:"),
+            "pin": int(input("Tell your pin:")),
+            "accountNo.": Bank.__accountgenerate(),
+            "balance": 0
+        }
+        if info['age']< 18 or len(str(info['pin'])) != 4:
+            print("Sorry you cannot create your account")
+        else:
+            print("Account has been created successfully")
+
+            for i in info:
+                print(f"{i}:{info[i]}") 
+            print("Please note down your account number:")
+            
+            Bank.data.append(info) 
+ 
+            Bank.__update()    
+
+
+    def depositemoney(self): 
+        accnum = input("Please tell your account num:")
+        pin = int(input("Pin plz:"))
+
+        userdata = [i for i in Bank.data if i['accountNo.'] == accnum and i['pin'] == pin]
+
+        if userdata == False:
+            print("sry no data found")
+        
+        else:
+            amount = int(input("How much money you want to deposit:"))
+            if amount > 10000 and amount < 0:
+                print("Sorry amount is to much you can deposit below 10000 and above")
+
+            else:
+                userdata[0]['balance'] += amount
+                Bank.__update()
+                print("Amount deposite successfully")
+
+
+    def withdrawmoney(self): 
+        accnum = input("Please tell your account num:")
+        pin = int(input("Pin plz:"))
+
+        userdata = [i for i in Bank.data if i['accountNo.'] == accnum and i['pin'] == pin]
+
+        if not userdata:
+            print("Sorry no data found")
+            return
+       
+        amount = int(input("how much money you want to withdraw money"))
+        if userdata[0]['balance'] < amount:
+            print("sry you dont have that much money")
+                
+        else:
+            userdata[0]['balance'] -= amount
+            Bank.__update()
+            print("Amount withdrew successfully")
+
+    
+    def showdetails(self):
+        accnum = input("Please tell your account num:")
+        pin = int(input("Pin plz:"))
+
+        userdata = [i for i in Bank.data if i['accountNo.'] == accnum and i['pin'] == pin]
+        if not userdata:
+          print("Sorry no data found")
+          return
+
+        print("your information are\n")
+        for key, value in userdata[0].items():
+           print(f"{key}: {value}")
+
+
+    def updatedetails(self):
+        accnumber = input("Please tell your account number:")
+        pin = int(input("Please tell your pin as well:"))
+
+        userdata = [i for i in Bank.data if i['accountNo.'] == accnumber and i['pin'] == pin]
+
+        if userdata == False:
+            print("no such user found ")
+        
+        else:
+            print("you cannot change the age, account number, balance")
+
+            print("Fill the details for change or leave it empty if no change")
+
+            newdata = {
+                "name": input("Please tell new name or press enter : "),
+                "email":input("Please tell your new Email or press enter to skip :"),
+                "pin": input("Enter new Pin or press enter to skip: ")
+            }
+
+            if newdata["name"] == "":
+                newdata["name"] = userdata[0]['name']
+            if newdata["email"] == "":
+                newdata["email"] = userdata[0]['email']
+            if newdata["pin"] == "":
+                newdata["pin"] = userdata[0]['pin']
+            
+            newdata['age'] = userdata[0]['age']
+
+            newdata['accountNo.'] = userdata[0]['accountNo.']
+            newdata['balance'] = userdata[0]['balance']
+            
+            if type(newdata['pin']) == str:
+                newdata['pin'] = int(newdata['pin'])
+            
+
+            for i in newdata:
+                 if newdata[i] == userdata[0][i]:
+                     continue
+                 else:
+                     userdata[0][i] = newdata[i]
+
+            Bank.__update()
+            print("Details updated successfully")
+
+
+    def Delete(self):
+        accnumber = input("Please tell your account number: ")
+        pin=int(input("Please tell your pin as well:"))
+        userdata = [i for i in Bank.data if i['accountNo.']== accnumber and i['pin'] == pin]
+
+        if userdata == False:
+            print("Sorry no such data exist ")
+        else:
+            check = input("Press y if you actually want to delete the account or press n:")
+            if check == 'n' or check == "N":
+                print("bypassed")
+            else:
+                index = Bank.data.index(userdata[0])
+
+                Bank.data.pop(index)
+                print("Account deleted successfully ")
+
+                Bank._update()       
+
+user = Bank()
+print("Press 1 for creating an account:")
+print("Press 2 for Deposititing the money in the bank:")
+print("Press 3 for Withdrawing the money:")
+print("Press 4 for Details:")
+print("Press 5 for updating the details:")
+print("Press 6 for deleting your account:")
+
+check = int(input("tell your response:"))
+
+if check == 1:
+    user.createaccount()
+
+if check == 2:
+    user.depositemoney()
+
+if check == 3:
+    user.withdrawmoney()
+
+if check == 4:
+    user.showdetails()
+
+if check == 5:
+    user.updatedetails() 
+
+if check == 6:
+    user.Delete()
